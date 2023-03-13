@@ -105,6 +105,7 @@ function App() {
           type="text"
           placeholder="Autor do post"
           value={autor}
+          
           onChange={(e) => setAutor(e.target.value)}
         />
 
