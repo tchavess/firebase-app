@@ -1,6 +1,6 @@
 import { useState} from 'react'
 import { db } from './firebaseConnection'
-import { doc, setDoc, collection, addDoc, getDocs, updateDoc } from 'firebase/firestore'
+import { doc, setDoc, collection, addDoc, getDocs, updateDoc, deleteDoc } from 'firebase/firestore'
 import './app.css'
 import { ToastContainer,toast } from 'react-toastify';
 function App() {
@@ -49,7 +49,6 @@ function App() {
           })
         });
         setPosts(lista)
-        toast.success("Não há postagens!");
       }).catch(error => {
         console.log(error)
       })
@@ -81,6 +80,19 @@ function App() {
     })
   }
 
+  async function excluirPost (postId) {
+    const docRef = doc(db, "posts", postId)
+    await deleteDoc(docRef)
+    .then(async () => {
+      alert("POST DELETADO COM SUCESSO.")
+      await buscarPosts()
+        
+    })
+    .catch(error =>{
+      alert(`ERROR AO EXCLUIR: ${error}`)
+    })
+  }
+
   return (
     <div className="App">
      <h1>HELLO WORD!  :)</h1>
@@ -105,13 +117,13 @@ function App() {
           type="text"
           placeholder="Autor do post"
           value={autor}
-          
+
           onChange={(e) => setAutor(e.target.value)}
         />
 
-        <button onClick={handleApp}>Cadastrar</button>
-        <button onClick={buscarPosts}>Buscar posts</button>
-        <button onClick={editarPost}>Atualizar posts</button>
+        <button onClick={handleApp}>Cadastrar</button><br/>
+        <button onClick={buscarPosts}>Buscar posts</button><br/>
+        <button onClick={editarPost}>Atualizar posts</button><br/>
 
         <ul>
           {posts.map(doc => {
@@ -120,7 +132,8 @@ function App() {
                 <li key={doc.id}>
                   <span>Titulo: {doc.titulo}</span>
                   <br></br>
-                  <span>Autor: {doc.autor}</span>
+                  <span>Autor: {doc.autor}</span><br/>
+                  <button onClick={ () => excluirPost(doc.id)}>Excluir</button>
                   <br></br>
                   <br/>
                 </li>
@@ -129,6 +142,7 @@ function App() {
           })}
         </ul>
      </div>
+     <ToastContainer />
     </div>
   );
 }
