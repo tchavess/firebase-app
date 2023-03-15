@@ -3,7 +3,7 @@ import { db, auth } from './firebaseConnection'
 import { doc, setDoc, collection, addDoc, getDocs, updateDoc, deleteDoc, onSnapshot } from 'firebase/firestore'
 import './app.css'
 import { ToastContainer,toast } from 'react-toastify';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from 'firebase/auth';
 function App() {
 
   const [titulo,setTitulo] = useState('')
@@ -12,6 +12,9 @@ function App() {
   const [idPost, setIdPost] = useState('')
   const [email, setEmail] = useState('')
   const [senha, setSenha] = useState('')
+  const [user, setUser] = useState(false)
+  const [userDetails, setUserDetails] = useState({})
+
   useEffect(() => {
     async function loadPosts() {
       const unsub = onSnapshot(collection(db, "posts"), (snapshot) => {
@@ -129,76 +132,109 @@ function App() {
     })
   }
 
+  async function logarUsuario(){
+    await signInWithEmailAndPassword(auth,email,senha)
+    .then((value ) => {
+      setUserDetails({
+        uid:value.user.uid,
+        email: value.user.email
+      })
+      setUser(true)
+      setEmail('')
+      setSenha('')
+      alert("Usuario logado com sucesso")
+    })
+    .catch((error) => {
+      alert(`Erro ao tentar logar: ${error}`)
+    })
+  }
+
+  async function deslogarUsuario() {
+    await signOut(auth)
+    setUser(false)
+    setUserDetails({})
+    alert("Usuario deslogado com sucesso.")
+  }
+
   return (
     <div className="App">
-     <h1>HELLO WORD!  :)</h1>
-     <div className='container'>
-        <h2>Usuarios</h2>
-        <label>Email</label>
-        <input
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder='Digite seu email'
-        /><br/>
-         <label>Senha</label>
-        <input
-          value={senha}
-          onChange={(e) => setSenha(e.target.value)}
-          placeholder='Digite sua senha'
-        /><br/>
-        <button onClick={novoUsuario}>Cadastrar</button>
+      <h1>HELLO WORD!  :)</h1><br/>
+      
+      {user && (
+          <div>
+            <strong>Seja bem vindo {userDetails.email}</strong><br/>
+            <button onClick={deslogarUsuario}>Logout</button>
+          </div>
+      )}
+
+      <div className='container'>
+          <h2>Usuarios</h2>
+          <label>Email</label>
+          <input
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder='Digite seu email'
+          /><br/>
+          <label>Senha</label>
+          <input
+            value={senha}
+            onChange={(e) => setSenha(e.target.value)}
+            placeholder='Digite sua senha'
+          /><br/>
+          <button onClick={novoUsuario}>Cadastrar</button>
+          <button onClick={logarUsuario}>Fazer login</button>
+        </div>
+        <br/><br/>
+        <hr/>
+        <br/>
+      <div className="container">
+          <h2>POSTS</h2>
+          <label>ID do Post</label>
+          <input
+            type="text"
+            placeholder="Digite o Id do post"
+            value={idPost}
+            onChange={(e) => setIdPost(e.target.value)}
+          ></input>
+          <label>Titulo:</label>
+          <textarea
+            type="text"
+            placeholder="Digite o titulo"
+            value={titulo}
+            onChange={(e) => setTitulo(e.target.value)}
+          />
+
+          <label>Autor:</label>
+          <input
+            type="text"
+            placeholder="Autor do post"
+            value={autor}
+
+            onChange={(e) => setAutor(e.target.value)}
+          /><br/>
+
+          <button onClick={handleApp}>Cadastrar</button><br/>
+          <button onClick={buscarPosts}>Buscar posts</button><br/>
+          <button onClick={editarPost}>Atualizar posts</button><br/>
+
+          <ul>
+            {posts.map(doc => {
+              return(
+                <>
+                  <li key={doc.id}>
+                    <span>Titulo: {doc.titulo}</span>
+                    <br></br>
+                    <span>Autor: {doc.autor}</span><br/>
+                    <button onClick={ () => excluirPost(doc.id)}>Excluir</button>
+                    <br></br>
+                    <br/>
+                  </li>
+                </>  
+              )
+            })}
+          </ul>
       </div>
-      <br/><br/>
-      <hr/>
-      <br/>
-     <div className="container">
-        <h2>POSTS</h2>
-        <label>ID do Post</label>
-        <input
-          type="text"
-          placeholder="Digite o Id do post"
-          value={idPost}
-          onChange={(e) => setIdPost(e.target.value)}
-        ></input>
-        <label>Titulo:</label>
-        <textarea
-          type="text"
-          placeholder="Digite o titulo"
-          value={titulo}
-          onChange={(e) => setTitulo(e.target.value)}
-        />
-
-        <label>Autor:</label>
-        <input
-          type="text"
-          placeholder="Autor do post"
-          value={autor}
-
-          onChange={(e) => setAutor(e.target.value)}
-        /><br/>
-
-        <button onClick={handleApp}>Cadastrar</button><br/>
-        <button onClick={buscarPosts}>Buscar posts</button><br/>
-        <button onClick={editarPost}>Atualizar posts</button><br/>
-
-        <ul>
-          {posts.map(doc => {
-            return(
-              <>
-                <li key={doc.id}>
-                  <span>Titulo: {doc.titulo}</span>
-                  <br></br>
-                  <span>Autor: {doc.autor}</span><br/>
-                  <button onClick={ () => excluirPost(doc.id)}>Excluir</button>
-                  <br></br>
-                  <br/>
-                </li>
-              </>  
-            )
-          })}
-        </ul>
-     </div>
-     <ToastContainer />
+      <ToastContainer />
     </div>
   );
 }
