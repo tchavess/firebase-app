@@ -1,15 +1,17 @@
 import { useEffect, useState} from 'react'
-import { db } from './firebaseConnection'
+import { db, auth } from './firebaseConnection'
 import { doc, setDoc, collection, addDoc, getDocs, updateDoc, deleteDoc, onSnapshot } from 'firebase/firestore'
 import './app.css'
 import { ToastContainer,toast } from 'react-toastify';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
 function App() {
 
   const [titulo,setTitulo] = useState('')
   const [autor, setAutor] = useState('')
   const [posts, setPosts] = useState([])
   const [idPost, setIdPost] = useState('')
-
+  const [email, setEmail] = useState('')
+  const [senha, setSenha] = useState('')
   useEffect(() => {
     async function loadPosts() {
       const unsub = onSnapshot(collection(db, "posts"), (snapshot) => {
@@ -103,19 +105,54 @@ function App() {
     const docRef = doc(db, "posts", postId)
     await deleteDoc(docRef)
     .then(async () => {
-      alert("POST DELETADO COM SUCESSO.")
-      await buscarPosts()
-        
+      alert("POST DELETADO COM SUCESSO.")        
     })
     .catch(error =>{
-      alert(`ERROR AO EXCLUIR: ${error}`)
+      alert(`ERRO AO DELETAR: ${error}`)
+    })
+  }
+
+  async function novoUsuario() {
+    await createUserWithEmailAndPassword(auth, email, senha)
+    .then(() => {
+      setEmail('')
+      setSenha('')
+      alert("USUARIO CADASTRADO COM SUCESSO.")
+    })
+    .catch(error => {
+      console.log(`ERRO AO CADASTRAR USUARIO: ${error}`)
+      if(error.code === 'auth/weak-password'){
+        alert("Senha muito fraca")
+      }else if(error.code === 'auth/email-already-in-use'){
+        alert('EMAIL JA EXISTE')
+      }
     })
   }
 
   return (
     <div className="App">
      <h1>HELLO WORD!  :)</h1>
+     <div className='container'>
+        <h2>Usuarios</h2>
+        <label>Email</label>
+        <input
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder='Digite seu email'
+        /><br/>
+         <label>Senha</label>
+        <input
+          value={senha}
+          onChange={(e) => setSenha(e.target.value)}
+          placeholder='Digite sua senha'
+        /><br/>
+        <button onClick={novoUsuario}>Cadastrar</button>
+      </div>
+      <br/><br/>
+      <hr/>
+      <br/>
      <div className="container">
+        <h2>POSTS</h2>
         <label>ID do Post</label>
         <input
           type="text"
@@ -138,7 +175,7 @@ function App() {
           value={autor}
 
           onChange={(e) => setAutor(e.target.value)}
-        />
+        /><br/>
 
         <button onClick={handleApp}>Cadastrar</button><br/>
         <button onClick={buscarPosts}>Buscar posts</button><br/>
