@@ -1,6 +1,6 @@
-import { useState} from 'react'
+import { useEffect, useState} from 'react'
 import { db } from './firebaseConnection'
-import { doc, setDoc, collection, addDoc, getDocs, updateDoc, deleteDoc } from 'firebase/firestore'
+import { doc, setDoc, collection, addDoc, getDocs, updateDoc, deleteDoc, onSnapshot } from 'firebase/firestore'
 import './app.css'
 import { ToastContainer,toast } from 'react-toastify';
 function App() {
@@ -9,6 +9,25 @@ function App() {
   const [autor, setAutor] = useState('')
   const [posts, setPosts] = useState([])
   const [idPost, setIdPost] = useState('')
+
+  useEffect(() => {
+    async function loadPosts() {
+      const unsub = onSnapshot(collection(db, "posts"), (snapshot) => {
+        let listaPosts = []
+        snapshot.forEach(doc => {
+          listaPosts.push({
+            id: doc.id,
+            titulo: doc.data().titulo,
+            autor: doc.data().autor
+          })
+        });
+        setPosts(listaPosts)
+      })
+    }
+
+    loadPosts()
+    //buscarPosts()
+  })
 
   async function handleApp() {
     // await setDoc(doc(db, "posts", "12345"), {
