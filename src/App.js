@@ -3,7 +3,7 @@ import { db, auth } from './firebaseConnection'
 import { doc, setDoc, collection, addDoc, getDocs, updateDoc, deleteDoc, onSnapshot } from 'firebase/firestore'
 import './app.css'
 import { ToastContainer,toast } from 'react-toastify';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from 'firebase/auth';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'firebase/auth';
 function App() {
 
   const [titulo,setTitulo] = useState('')
@@ -32,6 +32,25 @@ function App() {
 
     loadPosts()
     //buscarPosts()
+  })
+
+  useEffect(() => {
+    async function checkLogin() {
+      onAuthStateChanged(auth, (user) => {
+        if(user){
+          setUser(true)
+          setUserDetails({
+            uid: user.uid,
+            email: user.email
+          })
+        }else{
+          setUser(false)
+          setUserDetails({})
+        }
+      })
+    }
+
+    checkLogin()
   })
 
   async function handleApp() {
